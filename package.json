@@ -1,0 +1,11 @@
+{
+  "name": "loc-co-phieu-hose",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Trang web lọc cổ phiếu HOSE: top 20 tốt nhất, top 10 tiềm năng 25-30%/năm, vùng mua/bán, cổ tức.",
+  "scripts": {
+    "update": "node scripts/update-data.js",
+    "serve": "npx --yes http-server -p 8080 -c-1 ."
+  }
+}
