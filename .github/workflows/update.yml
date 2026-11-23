@@ -1,0 +1,62 @@
+name: Cập nhật dữ liệu và đăng trang
+
+on:
+  schedule:
+    - cron: '45 8 * * 1-5'   # 15:45 giờ Việt Nam, sau khi đóng cửa phiên (thứ 2–6)
+    - cron: '30 0 * * 1-5'   # 07:30 giờ Việt Nam, cập nhật lịch cổ tức mới công bố
+  workflow_dispatch:          # cho phép bấm chạy tay trong tab Actions
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Lấy dữ liệu và chấm điểm
+        id: update
+        continue-on-error: true   # nếu nguồn dữ liệu lỗi, vẫn đăng trang với dữ liệu cũ
+        run: node scripts/update-data.js
+
+      - name: Lưu dữ liệu mới vào kho
+        if: steps.update.outcome == 'success'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/stocks.json
+          if git diff --staged --quiet; then
+            echo "Không có thay đổi"
+          else
+            git commit -m "Cập nhật dữ liệu $(TZ=Asia/Ho_Chi_Minh date +'%Y-%m-%d %H:%M')"
+            git push || echo "Không đẩy được commit dữ liệu (bỏ qua)"
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
