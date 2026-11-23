@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lọc Cổ Phiếu HOSE</title>
+  <meta name="description" content="Bộ lọc cổ phiếu sàn HOSE tự động: top 20 mã tốt nhất, top 10 mã tiềm năng 25–30%/năm an toàn cao, vùng mua – vùng bán – cắt lỗ, cổ tức hằng năm và lịch trả cổ tức.">
+  <meta property="og:title" content="Lọc Cổ Phiếu HOSE">
+  <meta property="og:description" content="Top 20 mã tốt nhất, top 10 mã tiềm năng 25–30%/năm, vùng mua/bán và lịch cổ tức – cập nhật mỗi ngày.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M6 22l6-7 5 4 9-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>
+    try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <div class="brand">
+        <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#2a78d6"/><path d="M6 22l6-7 5 4 9-10" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div>
+          <h1>Lọc Cổ Phiếu HOSE</h1>
+          <p>Chấm điểm tự động · vùng mua/bán · cổ tức</p>
+        </div>
+      </div>
+      <div class="meta" id="meta">Đang tải dữ liệu…</div>
+      <button class="btn primary" id="refreshBtn" title="Lấy dữ liệu mới nhất trực tiếp từ nguồn và tính lại (khoảng 30–60 giây)">⟳ Cập nhật trực tiếp</button>
+      <button class="btn icon" id="themeBtn" title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện sáng/tối">◐</button>
+    </div>
+  </header>
+
+  <div class="banner" role="note">
+    <div class="wrap">
+      <b>Lưu ý:</b> Số liệu được tính tự động bằng công thức cố định từ dữ liệu công khai, <b>chỉ để tham khảo, không phải khuyến nghị đầu tư</b>.
+      "Lợi nhuận kỳ vọng" là ước tính của mô hình, không phải cam kết; giá cổ phiếu có thể giảm. Hãy tự kiểm tra thông tin trước khi giao dịch.
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="progress" id="progress" aria-live="polite"></div>
+    <section class="kpis" id="kpis" aria-label="Tổng quan"></section>
+
+    <nav class="tabs" role="tablist" aria-label="Danh mục">
+      <button class="tab" role="tab" data-tab="top20" aria-selected="true">Top 20 tốt nhất</button>
+      <button class="tab" role="tab" data-tab="top10" aria-selected="false">Top 10 tiềm năng 25–30%</button>
+      <button class="tab" role="tab" data-tab="calendar" aria-selected="false">Lịch cổ tức</button>
+      <button class="tab" role="tab" data-tab="all" aria-selected="false">Tất cả mã</button>
+      <button class="tab" role="tab" data-tab="method" aria-selected="false">Phương pháp</button>
+    </nav>
+
+    <section class="panel" id="tab-top20" role="tabpanel">
+      <div class="panel-head">
+        <div class="grow">
+          <h2>Top 20 cổ phiếu tốt nhất HOSE</h2>
+          <p>Xếp theo điểm tổng hợp: chất lượng (ROE, ROA, độ ổn định EPS), tăng trưởng EPS, định giá, an toàn (beta, biến động, sụt giảm, vốn hoá, thanh khoản, xu hướng) và cổ tức. Tối đa 5 mã mỗi ngành. Bấm vào một dòng để xem chi tiết.</p>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="cards" id="t-top20"></table></div>
+    </section>
+
+    <section class="panel" id="tab-top10" role="tabpanel" hidden>
+      <div class="panel-head">
+        <div class="grow">
+          <h2>Top 10 mã tiềm năng sinh lời 25–30%/năm, độ an toàn cao</h2>
+          <p id="top10-desc">Lợi nhuận kỳ vọng 12 tháng = tiềm năng tăng giá tới giá mục tiêu + lợi suất cổ tức. Chỉ chọn mã có điểm an toàn và chất lượng cao, tối đa 3 mã mỗi ngành.</p>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="cards" id="t-top10"></table></div>
+      <p class="note" id="top10-note"></p>
+    </section>
+
+    <section class="panel" id="tab-calendar" role="tabpanel" hidden>
+      <div class="panel-head">
+        <div class="grow">
+          <h2>Lịch cổ tức sắp tới – sàn HOSE</h2>
+          <p>Các sự kiện có ngày giao dịch không hưởng quyền (GDKHQ) hoặc ngày thanh toán từ hôm nay trở đi. Muốn nhận cổ tức, cần sở hữu cổ phiếu <b>trước</b> ngày GDKHQ.</p>
+        </div>
+        <div class="filters">
+          <select id="cal-kind" aria-label="Loại sự kiện">
+            <option value="all">Tất cả sự kiện</option>
+            <option value="ex">Sắp GDKHQ</option>
+            <option value="pay">Sắp thanh toán</option>
+            <option value="cash">Chỉ tiền mặt</option>
+            <option value="stock">Chỉ cổ phiếu</option>
+          </select>
+          <label><input type="checkbox" id="cal-universe"> Chỉ mã trong bộ lọc</label>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="cards" id="t-calendar"></table></div>
+    </section>
+
+    <section class="panel" id="tab-all" role="tabpanel" hidden>
+      <div class="panel-head">
+        <div class="grow">
+          <h2>Tất cả mã qua vòng lọc</h2>
+          <p id="all-desc">Bấm tiêu đề cột để sắp xếp.</p>
+        </div>
+        <div class="filters">
+          <input type="search" id="all-search" placeholder="Tìm mã hoặc tên…" aria-label="Tìm mã">
+          <select id="all-sector" aria-label="Ngành"><option value="">Tất cả ngành</option></select>
+          <select id="all-status" aria-label="Trạng thái">
+            <option value="">Mọi trạng thái</option>
+            <option value="buy">Trong vùng mua</option>
+            <option value="buyweak">Vùng mua – xu hướng yếu</option>
+            <option value="wait">Chờ điều chỉnh</option>
+            <option value="sell">Vùng chốt lời</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="cards" id="t-all"></table></div>
+    </section>
+
+    <section class="panel" id="tab-method" role="tabpanel" hidden>
+      <div class="method" id="method"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      Nguồn dữ liệu: VNDirect Finfo API công khai (giá, chỉ số tài chính, sự kiện quyền, giá mục tiêu của các CTCK). Dữ liệu tự cập nhật sau mỗi phiên giao dịch.
+      Trang web không thu thập thông tin cá nhân. Không phải khuyến nghị đầu tư.
+    </div>
+  </footer>
+
+  <dialog id="detail" aria-labelledby="d-title"></dialog>
+
+  <script type="module" src="assets/app.js"></script>
+</body>
+</html>
