@@ -15,15 +15,18 @@ console.log(`Tỷ lệ mã ở vùng mua (trung bình): toàn bộ ${p(r.saturat
 
 for (const h of [3, 6, 12]) {
   console.log(`## Nhóm theo lợi suất ${h} tháng (sau phí ${(r.params.cost * 100).toFixed(1)}%; "hơn mốc" = so với trung bình toàn bộ mã đạt lọc)`);
-  console.log('| Nhóm | Số tín hiệu | Số mã TB | Lợi suất | Mốc | Hơn mốc | ±SE | % lần hơn mốc | Tệ nhất |');
+  console.log('| Nhóm | Số tín hiệu | Số mã TB | Lợi suất | Mốc | Hơn mốc | ±SE (n/h ; Newey-West) | % lần hơn mốc | Tệ nhất |');
   console.log('|---|---|---|---|---|---|---|---|---|');
   for (const c of r.cohorts) {
     const s = c.byH[h];
     if (!s) { console.log(`| ${c.name} | — | | | | | | | |`); continue; }
-    console.log(`| ${c.name} | ${s.nSignals} (~${s.nEff} độc lập) | ${s.avgNames} | ${sp(s.net)} | ${sp(s.universe - 0.006)} | ${sp(s.excess)} | ${p(s.excessSE)} | ${p(s.beatRate, 0)} | ${sp(s.worst)} |`);
+    console.log(`| ${c.name} | ${s.nSignals} (~${s.nEff} độc lập) | ${s.avgNames} | ${sp(s.net)} | ${sp(s.universe - 0.006)} | ${sp(s.excess)} | ${p(s.excessSE)} ; ${p(s.excessSE_NW)} | ${p(s.beatRate, 0)} | ${sp(s.worst)} |`);
   }
   console.log('');
 }
+console.log('## Dải dao động khi chọn NGẪU NHIÊN 20 mã (1000 lần, khoảng 95%): Top 20 phải nằm ngoài dải này mới phân biệt được với may rủi');
+for (const h of [6, 12]) { const b = r.randomBand?.[h]; if (b) console.log(h + ' tháng: ' + sp(b.lo) + ' đến ' + sp(b.hi) + ' (độ lệch chuẩn ' + p(b.sd) + ', ' + b.nSignals + ' tín hiệu)'); }
+console.log('');
 console.log('## Hiệu chuẩn: chia mã thành 5 nhóm theo "LN kỳ vọng" (nhóm 1 thấp nhất), lợi suất thật sau 12 tháng');
 console.log('| Nhóm | Số mẫu | LN kỳ vọng TB | Lợi suất thật TB | Hơn mặt bằng |');
 console.log('|---|---|---|---|---|');

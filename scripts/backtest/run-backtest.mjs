@@ -117,7 +117,7 @@ for (const asOf of months) {
     const fw = {};
     for (const h of HORIZONS) fw[h] = fwdReturn(s.code, signalDate, h);
     rows.push({
-      code: s.code, sector: s.sector, er: s.er, upside: s.upside, scores: s.scores, status: s.zones.statusKey,
+      code: s.code, sector: s.sector, er: s.er, upside: s.upside, scores: s.scores, status: s.zones.statusKey, pe: s.pe, mcap: s.mcap,
       zones: s.zones, price: s.price, fw,
       zone12: ['buy', 'buyweak'].includes(s.zones.statusKey) ? simulateZone(s.code, signalDate, s.zones) : null,
       zoneNoStop: ['buy', 'buyweak'].includes(s.zones.statusKey) ? simulateZone(s.code, signalDate, s.zones, { stop: 'none' }) : null,
@@ -130,6 +130,36 @@ for (const asOf of months) {
 
 // ---------- Tổng hợp ----------
 const net = (r) => (r == null ? null : r - COST);
+// Sai số chuẩn Newey-West cho chuỗi chênh lệch theo tháng (các cửa sổ h tháng chồng lấn nên tự tương quan, lag = h-1)
+function nwSE(series, lag) {
+  const n = series.length;
+  if (n < 6) return null;
+  const m = mean(series);
+  const g = (l) => { let s = 0; for (let i = l; i < n; i++) s += (series[i] - m) * (series[i - l] - m); return s / n; };
+  let v = g(0);
+  for (let l = 1; l <= Math.min(lag, n - 2); l++) v += 2 * (1 - l / (lag + 1)) * g(l);
+  return Math.sqrt(Math.max(v, 0) / n);
+}
+function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+// Dải dao động của việc chọn NGẪU NHIÊN 20 mã (1000 lần): nếu Top 20 nằm trong dải này thì chưa phân biệt được với may rủi
+function randomBand(h, B = 1000) {
+  const rng = mulberry32(12345);
+  const sigs = snapshots.map((sn) => sn.rows.filter((r) => r.fw[h] != null)).filter((rs) => rs.length >= 30);
+  if (!sigs.length) return null;
+  const draws = [];
+  for (let b = 0; b < B; b++) {
+    let s = 0;
+    for (const rs of sigs) {
+      const uni = mean(rs.map((r) => r.fw[h]));
+      const idx = rs.map((_, i) => i);
+      for (let i = 0; i < 20; i++) { const j = i + Math.floor(rng() * (idx.length - i)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+      s += mean(idx.slice(0, 20).map((i) => rs[i].fw[h])) - uni;
+    }
+    draws.push(s / sigs.length);
+  }
+  draws.sort((a, b) => a - b);
+  return { nSignals: sigs.length, lo: draws[Math.floor(B * 0.025)], hi: draws[Math.floor(B * 0.975)], sd: sd(draws) };
+}
 function cohortStats(name, pick) {
   const res = { name, byH: {} };
   for (const h of HORIZONS) {
@@ -148,7 +178,7 @@ function cohortStats(name, pick) {
       nSignals: per.length, nEff: +nEff.toFixed(1), avgNames: +mean(per.map((x) => x.n)).toFixed(1),
       gross: mean(per.map((x) => x.c)), net: mean(per.map((x) => net(x.c))), universe: mean(per.map((x) => x.u)),
       excess: mean(ex), excessMedian: median(ex), beatRate: ex.filter((x) => x > 0).length / ex.length,
-      excessSE: sd(ex) / Math.sqrt(nEff), worst: Math.min(...per.map((x) => x.c)),
+      excessSE: sd(ex) / Math.sqrt(nEff), excessSE_NW: nwSE(ex, h - 1), worst: Math.min(...per.map((x) => x.c)),
     };
   }
   return res;
@@ -157,6 +187,11 @@ const inBuy = (r) => ['buy', 'buyweak'].includes(r.status);
 const cohorts = [
   cohortStats('Toàn bộ mã đạt bộ lọc (mốc so sánh)', (s) => s.rows),
   cohortStats('Top 20', (s) => s.rows.filter((r) => s.top20.includes(r.code))),
+  // Các bộ lọc đơn giản để so sánh: nếu mô hình không hơn được những cách này thì chưa chứng minh được giá trị gia tăng
+  cohortStats('[So sánh] 20 mã P/E thấp nhất', (s) => s.rows.filter((r) => r.pe > 0).sort((a, b) => a.pe - b.pe).slice(0, 20)),
+  cohortStats('[So sánh] 20 mã vốn hoá lớn nhất', (s) => [...s.rows].sort((a, b) => b.mcap - a.mcap).slice(0, 20)),
+  cohortStats('[So sánh] 20 mã điểm Định giá cao nhất', (s) => [...s.rows].sort((a, b) => b.scores.value - a.scores.value).slice(0, 20)),
+  cohortStats('[So sánh] 20 mã tiềm năng ước tính cao nhất', (s) => [...s.rows].sort((a, b) => b.er - a.er).slice(0, 20)),
   cohortStats('Mã nổi bật (Top 10)', (s) => s.rows.filter((r) => s.top10.includes(r.code))),
   cohortStats('Top 20 đang trong vùng mua', (s) => s.rows.filter((r) => s.top20.includes(r.code) && inBuy(r))),
   cohortStats('Mọi mã trong vùng mua (xu hướng tốt)', (s) => s.rows.filter((r) => r.status === 'buy')),
@@ -318,6 +353,7 @@ const summary = {
   label: LABEL, params: { from: FROM, lagDays: LAG, cost: COST, maxUpside: cfg.maxUpside }, signals: snapshots.length,
   firstSignal: snapshots[0]?.asOf, lastSignal: snapshots[snapshots.length - 1]?.asOf, lastPriceDate: lastDate,
   cohorts, quintilesByER12m: quint, ic, zones, yearly, satVsFuture, icByYear, spreadYear,
+  randomBand: { 6: randomBand(6), 12: randomBand(12) },
   saturation: { avgBuyShareUniverse: mean(sat.map((x) => x.buyShareUniverse)), avgBuyShareTop20: mean(sat.map((x) => x.buyShareTop20)) },
   avgUniverse: mean(snapshots.map((s) => s.universe)),
 };

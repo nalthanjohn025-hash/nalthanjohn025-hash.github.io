@@ -20,6 +20,8 @@ export const CONFIG = {
   top20Rank: 'total',        // cách xếp Top 20: 'total' (điểm tổng) | 'er' (LN kỳ vọng) | 'blend' (trung bình phân vị hai loại)
   stop: { minPct: 0.07, maxPct: 0.15, atrMult: 2 }, // cắt lỗ: dưới cận dưới vùng mua tối thiểu minPct, ~atrMult×ATR, tối đa maxPct
   maxPerSector: { top20: 5, top10: 3 }, // giới hạn số mã cùng ngành để đa dạng hoá
+  top20MinQuality: 40,       // điểm chất lượng tối thiểu để vào Top 20
+  top20HardFlag: true,       // loại mã ROE < 8% hoặc EPS giảm > 25% khỏi Top 20
 };
 
 const RATIO_CODES = [
@@ -468,7 +470,9 @@ export async function buildDataset({ get, log = () => {}, now = new Date(), conf
     const rt = ranker(list.map((x) => x.scores.total)), re = ranker(list.map((x) => x.er));
     rankScore = (s) => 0.5 * rt(s.scores.total) + 0.5 * re(s.er);
   }
-  for (const s of list.filter((x) => !x.hardFlag && x.scores.quality >= 40).sort((a, b) => rankScore(b) - rankScore(a))) {
+  const minQ = C.top20MinQuality ?? 40;
+  const useHard = C.top20HardFlag ?? true;
+  for (const s of list.filter((x) => (!useHard || !x.hardFlag) && x.scores.quality >= minQ).sort((a, b) => rankScore(b) - rankScore(a))) {
     if (top20.length >= 20) break;
     if ((sec20[s.sector] || 0) >= C.maxPerSector.top20) continue;
     sec20[s.sector] = (sec20[s.sector] || 0) + 1;

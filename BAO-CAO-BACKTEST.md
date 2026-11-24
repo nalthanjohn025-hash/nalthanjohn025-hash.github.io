@@ -4,6 +4,47 @@ Ngày lập: 24/11/2026 · Dữ liệu giá đến phiên 23/11/2026
 
 > Đây là đánh giá kỹ thuật của một bộ công thức, không phải lời khuyên đầu tư. Kết quả quá khứ không bảo đảm kết quả tương lai.
 
+## 0. Cập nhật sau rà soát độc lập (24/11/2026) — đọc mục này trước
+
+Một mô hình khác (Opus) đã rà soát độc lập mã và kết luận của báo cáo này. Tóm tắt:
+
+**Đứng vững:** không phát hiện lỗi nhìn trước tương lai đáng kể (dữ liệu P/E, BVPS, giá điều chỉnh, độ trễ EPS 45 ngày đều hợp lý); mã tính lợi suất và giao dịch giả lập đúng; các số chính tái lập chính xác. Cũng đứng vững: điểm "tiềm năng ước tính" có khả năng xếp hạng (chủ yếu do yếu tố định giá), cắt lỗ mặc định quá sát, mã "vùng chốt lời" kém mặt bằng.
+
+**Phải sửa so với các phần bên dưới:**
+1. **Giai đoạn "kiểm tra" không xác nhận được trọng số mới.** Trọng số được chọn sau khi xem toàn bộ dữ liệu. Chỉ dùng giai đoạn học thì Chất lượng (IC 0,18) và Cổ tức (0,11) tốt hơn Định giá (0,10), tức sẽ chọn ngược lại. Giai đoạn kiểm tra chỉ có 16 tín hiệu có kết quả 12 tháng (không phải 29), và cửa sổ lợi suất của hai giai đoạn chồng lấn 12 tháng. **Trọng số mới là giả thuyết chưa được kiểm chứng.**
+2. **Các bộ lọc đơn giản hơn mô hình rất nhiều** (cùng dữ liệu, lợi suất 12 tháng hơn mặt bằng, điểm %):
+
+| Cách chọn 20 mã | Hơn mặt bằng 12T | % tháng hơn mặt bằng | Sai số Newey-West |
+|---|---|---|---|
+| P/E thấp nhất | +12,1 | 97% | ±2,3 |
+| Vốn hoá lớn nhất | +11,8 | 81% | ±7,4 |
+| Điểm Định giá cao nhất | +11,5 | 75% | ±6,3 |
+| Tiềm năng ước tính cao nhất (không áp bộ lọc chất lượng/giới hạn ngành) | +11,8 | 72% | ±6,1 |
+| **Top 20 trọng số mới** | **+5,2** | 72% | ±1,6 (*) |
+| **Top 20 trọng số gốc** | **+1,5** | 56% | ±1,9 (*) |
+| Chọn ngẫu nhiên 20 mã (1000 lần, khoảng 95%) | −3,0 đến +3,2 | — | — |
+
+(*) Sai số Newey-West với chỉ 32 tín hiệu chồng lấn không đáng tin; sai số theo số quan sát độc lập khoảng ±6. Top 20 gốc nằm trong dải của chọn ngẫu nhiên; Top 20 mới nằm trên dải nhưng thấp hơn xa các bộ lọc đơn giản.
+   Chưa có bằng chứng rằng điểm tổng hợp phức tạp tốt hơn một bộ lọc P/E hoặc vốn hoá đơn giản (giai đoạn 2023–2026 là giai đoạn định giá thấp và vốn hoá lớn đều thắng, có thể không lặp lại).
+
+   **Kiểm tra bổ sung (đã làm sau khi có nhận định trên):** thử bỏ từng bộ lọc của Top 20 xem chúng có phải nguyên nhân không. Kết quả là **không**:
+
+| Phương án Top 20 (trọng số mới) | Hơn mặt bằng 12T | Giai đoạn học | Giai đoạn kiểm tra | Thua tệ nhất |
+|---|---|---|---|---|
+| Hiện tại (đủ bộ lọc) | +5,2 | +5,0 | +5,5 | −10,7 |
+| Bỏ giới hạn 5 mã/ngành | +5,1 | +4,1 | +6,0 | −12,6 |
+| Bỏ ngưỡng điểm chất lượng | +4,1 | +4,4 | +3,7 | −10,9 |
+| Bỏ hết bộ lọc (kể cả loại ROE thấp/EPS giảm) | +3,1 | +3,6 | +2,6 | −16,0 |
+| Bỏ hết bộ lọc và xếp theo tiềm năng ước tính | +12,0 | +3,4 | **+20,5** | −16,0 |
+| Gốc (trọng số cũ, đủ bộ lọc) | +1,5 | +3,3 | −0,3 | −15,3 |
+
+   Bỏ bộ lọc không cải thiện (còn giảm nhẹ). Phần "mất tín hiệu" nằm ở **cách xếp hạng bằng điểm tổng hợp** (nhất là trọng số An toàn 30% và Chất lượng), không phải ở bộ lọc. Xếp thẳng theo tiềm năng ước tính cho +12,0 điểm %, nhưng gần như toàn bộ đến từ giai đoạn sau 07/2024 (+3,4 ở giai đoạn học so với +20,5 ở giai đoạn kiểm tra), nên không đáng tin hơn các phương án khác. Ngược lại, bộ lọc P/E thấp ổn định hơn qua hai giai đoạn (khoảng +11 và +13 theo Opus). Đây là kiểm tra thăm dò, thêm vào nhiều lần thử trước đó nên cũng chịu cùng cảnh báo về chọn lọc kết quả.
+3. **Đã thử khoảng 10 cấu hình rồi chọn cấu hình tốt nhất**, nên chênh lệch +3,7 điểm % giữa trọng số mới và cũ chưa đủ chắc chắn.
+4. **Trần +35% làm kết quả giao dịch giả lập kém đi:** lợi suất mỗi lệnh theo quy tắc web 7,6% → 6,5%; không cắt lỗ 14,4% → 12,5%. Ngoài ra 18/20 mã Top 20 chạm đúng trần nên cột "Tiềm năng ước tính" không còn phân biệt được các mã đầu bảng. Trần chỉ cải thiện việc số hiển thị gần thực tế hơn.
+5. **Danh sách mã thiếu một số mã đã hủy niêm yết** (FLC, HAI, AMD, TGG...), do nguồn chỉ liệt kê mã đang ở HOSE hôm nay; ảnh hưởng ước tính nhỏ vì phần lớn không qua bộ lọc vốn hoá. **Khuyến nghị CTCK trong quá khứ rất thưa** (khoảng 15 báo cáo/tháng so với 134 trong 10–11/2026), nên giá mục tiêu và vùng mua lịch sử lệch so với hiện tại.
+
+**Trạng thái hiện tại:** trọng số mới và trần 35% đang chạy trên web nhưng được gắn nhãn "chưa kiểm chứng". Cách đánh giá đúng là dữ liệu thật tích lũy từ 24/11/2026 (đã bật bản chụp hằng ngày), so với bộ lọc P/E thấp và chọn ngẫu nhiên 20 mã.
+
 ## 1. Tóm tắt
 
 1. **Điểm "LN kỳ vọng" có khả năng xếp hạng, nhưng con số tuyệt đối bị thổi phồng.** Chia các mã thành 5 nhóm theo "LN kỳ vọng", nhóm cao nhất cho lợi suất thật 12 tháng +27,1%, nhóm thấp nhất +9,3% (chênh +17,8 điểm %). Nhóm cao nhất được dự báo +38%, nhóm thấp nhất được dự báo −20%, nhưng thực tế không mã nào "đúng như dự báo". Nên dùng như thứ hạng, không dùng như lời hứa lợi nhuận.
@@ -114,7 +155,7 @@ Các gợi ý dưới đây chỉ nên áp dụng sau khi kiểm tra ngoài mẫ
 
 ### Cách làm
 - Chốt trước danh sách phương án (7 phương án, file `scripts/backtest/variants.json`), chạy tất cả, không thêm phương án sau khi xem kết quả (trừ một phương án ghép trọng số mới với trần +35%).
-- Chia thời gian: **giai đoạn học** là các tín hiệu trước 07/2024 (16 tín hiệu), **giai đoạn kiểm tra** là từ 07/2024 (29 tín hiệu).
+- Chia thời gian: **giai đoạn học** là các tín hiệu trước 07/2024 (16 tín hiệu), **giai đoạn kiểm tra** là từ 07/2024 (29 tín hiệu, nhưng chỉ 16 có kết quả 12 tháng; xem mục 0 về việc giai đoạn này không phải kiểm chứng sạch).
 
 ### Kết quả các phương án xếp hạng Top 20 (hơn mặt bằng sau 12 tháng, điểm %)
 
@@ -126,11 +167,11 @@ Các gợi ý dưới đây chỉ nên áp dụng sau khi kiểm tra ngoài mẫ
 | Pha trộn điểm tổng + tiềm năng | +4,3 | +1,7 | +3,0 | 66% |
 | Trọng số mới + pha trộn | +4,4 | +2,6 | +3,5 | 72% |
 
-Phương án trọng số mới tốt hơn gốc ở **cả hai giai đoạn và cả ba năm** (2023: +3,0 so với +2,6; 2024: +3,0 so với −3,1; 2025: +10,0 so với +5,9).
+(Đã điều chỉnh sau rà soát: đây là kết quả trong dữ liệu đã dùng để chọn trọng số, không phải kiểm chứng ngoài mẫu.) Phương án trọng số mới tốt hơn gốc ở **cả hai giai đoạn và cả ba năm** (2023: +3,0 so với +2,6; 2024: +3,0 so với −3,1; 2025: +10,0 so với +5,9).
 
 ### Đã áp dụng
 1. **Trọng số điểm:** Chất lượng 25→15, Tăng trưởng 15→20, Định giá 20→30, An toàn 30 (giữ), Cổ tức 10→5.
-2. **Trần tiềm năng tăng giá:** 60% → 35%. Không đổi thứ hạng đáng kể; nhóm cao nhất hiển thị +32% so với thực tế +27% (trước đây +38%).
+2. **Trần tiềm năng tăng giá:** 60% → 35%. Không đổi thứ hạng đáng kể; nhóm cao nhất hiển thị +32% so với thực tế +27% (trước đây +38%). Đổi lại, kết quả giao dịch giả lập kém hơn (xem mục 0, điểm 4); đây là một đánh đổi cần cân nhắc, không phải cải thiện thuần túy.
 3. **Đổi tên "LN kỳ vọng" thành "Tiềm năng ước tính"** trên toàn web, thêm mục "Kiểm chứng trong quá khứ" ở tab Phương pháp.
 4. **Cảnh báo bão hoà:** hiển thị khi từ 50% số mã đạt lọc cùng ở vùng mua.
 

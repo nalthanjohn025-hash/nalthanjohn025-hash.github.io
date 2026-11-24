@@ -247,7 +247,7 @@ function renderMethod() {
     <li>Chạy lại đúng công thức của trang tại 45 ngày cuối tháng với dữ liệu như thể hôm đó là "hôm nay", rồi đo lợi suất thật sau 3, 6, 12 tháng (đã trừ phí 0,6%, tính cả cổ tức).</li>
     <li>Chia mã thành 5 nhóm theo <b>tiềm năng ước tính</b>: nhóm cao nhất cho lợi suất thật 12 tháng khoảng <b>+27%</b>, nhóm thấp nhất khoảng <b>+9%</b>, trong khi mặt bằng chung khoảng +15%. Vì vậy hãy dùng chỉ số này để <b>so sánh thứ hạng</b>, không dùng như dự báo con số.</li>
     <li>Mã đang ở "vùng chốt lời" hoặc có tiềm năng ước tính dưới 10% kém mặt bằng khoảng 4 điểm % sau 12 tháng.</li>
-    <li>Trọng số điểm và trần tiềm năng +35% được chọn sau khi xem kết quả này nên có thể quá lạc quan; chưa có kiểm chứng thật ngoài dữ liệu đã dùng.</li>
+    <li><b>Chưa kiểm chứng:</b> trọng số điểm hiện tại và trần tiềm năng +35% được chọn sau khi xem kết quả quá khứ, nên chưa có kiểm chứng ngoài dữ liệu đã dùng và có thể quá lạc quan. Một người rà soát độc lập chỉ ra rằng trong cùng dữ liệu, chọn 20 mã có P/E thấp nhất cho kết quả tốt hơn Top 20 của trang (khoảng +12 so với +5 điểm % sau 12 tháng), nên điểm tổng hợp chưa chứng minh được giá trị gia tăng so với một bộ lọc đơn giản. Giai đoạn kiểm tra là giai đoạn định giá thấp và vốn hoá lớn đều thắng, có thể không lặp lại.</li>
     <li>Mức cắt lỗ mặc định bị chạm trong khoảng 4 trên 10 lệnh giả lập, thường trong vòng vài tháng.</li>
     <li>Giới hạn: chỉ khoảng 3,7 năm, chủ yếu là thị trường tăng, số quan sát độc lập rất ít; không có giai đoạn giảm sâu. Chi tiết xem file BAO-CAO-BACKTEST.md trong kho mã.</li>
   </ul>
