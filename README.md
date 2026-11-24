@@ -3,7 +3,7 @@
 Trang web tĩnh, chạy miễn phí trên **GitHub Pages** (tên miền miễn phí dạng `https://ten-cua-ban.github.io`):
 
 - **Top 20 cổ phiếu tốt nhất HOSE** theo điểm tổng hợp (chất lượng, tăng trưởng, định giá, an toàn, cổ tức).
-- **Top 10 mã tiềm năng 25–30%/năm, độ an toàn cao** (lợi nhuận kỳ vọng = tăng giá tới giá mục tiêu + cổ tức).
+- **Mã nổi bật (tối đa 10 mã, theo điểm tổng hợp)** (tiềm năng ước tính = tăng giá tới giá mục tiêu + cổ tức).
 - **Vùng mua, vùng bán (chốt lời), ngưỡng cắt lỗ** cho từng mã, kèm biểu đồ giá 1 năm.
 - **Cổ tức hằng năm**, lịch sử chi trả, **ngày GDKHQ và ngày thanh toán**, lịch cổ tức sắp tới của toàn sàn.
 - Tự cập nhật sau mỗi phiên (15h45 các ngày thứ 2–6) bằng GitHub Actions; có nút **Cập nhật trực tiếp** để tính lại ngay trong trình duyệt.
@@ -65,10 +65,12 @@ Sửa `CONFIG` ở đầu file `assets/engine.js`:
 |---|---|---|
 | `minMarketCap` | 3.000 tỷ | Vốn hoá tối thiểu |
 | `minLiquidity` | 5 tỷ/phiên | Giá trị giao dịch bình quân 10 phiên tối thiểu |
-| `minReturn` | 25% | LN kỳ vọng tối thiểu khi mua ở cận trên vùng mua |
+| `minReturn` | 25% | tiềm năng ước tính tối thiểu khi mua ở cận trên vùng mua |
 | `top10Tiers` | 25–45%, an toàn ≥ 60, chất lượng ≥ 50 | Tiêu chí Top 10 (mức đủ và mức nới lỏng) |
-| `weights` | 25/15/20/30/10 | Tỷ trọng chất lượng/tăng trưởng/định giá/an toàn/cổ tức |
-| `maxUpside` | 60% | Trần tiềm năng tăng giá của mô hình |
+| `weights` | 15/20/30/30/5 (đổi 24/11/2026 theo backtest; bản cũ 25/15/20/30/10) | Tỷ trọng chất lượng/tăng trưởng/định giá/an toàn/cổ tức |
+| `maxUpside` | 35% (bản cũ 60%) | Trần tiềm năng tăng giá của mô hình |
+| `top20Rank` | total | Cách xếp Top 20: `total` (điểm tổng), `er` (tiềm năng ước tính) hoặc `blend` |
+| `stop` | 7% / 15% / 2×ATR | Cắt lỗ dưới cận dưới vùng mua: tối thiểu / tối đa / hệ số ATR |
 | `maxPerSector` | 5 (Top 20), 3 (Top 10) | Giới hạn số mã cùng ngành |
 
 Chi tiết công thức xem tab **Phương pháp** trên trang.

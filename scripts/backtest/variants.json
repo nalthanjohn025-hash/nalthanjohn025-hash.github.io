@@ -1,0 +1,10 @@
+{
+  "V0": {},
+  "V1_trong_so_dinh_gia_tang_truong": { "weights": { "quality": 0.15, "growth": 0.20, "value": 0.30, "safety": 0.30, "dividend": 0.05 } },
+  "V2_xep_theo_LN_ky_vong": { "top20Rank": "er" },
+  "V3_pha_tron": { "top20Rank": "blend" },
+  "V4_trong_so_moi_va_pha_tron": { "weights": { "quality": 0.15, "growth": 0.20, "value": 0.30, "safety": 0.30, "dividend": 0.05 }, "top20Rank": "blend" },
+  "S1_cat_lo_rong": { "stop": { "minPct": 0.10, "maxPct": 0.20, "atrMult": 3 } },
+  "A_V1_tran35": { "weights": { "quality": 0.15, "growth": 0.20, "value": 0.30, "safety": 0.30, "dividend": 0.05 }, "maxUpside": 0.35 },
+  "S2_cat_lo_rong_hon": { "stop": { "minPct": 0.12, "maxPct": 0.25, "atrMult": 3.5 } }
+}

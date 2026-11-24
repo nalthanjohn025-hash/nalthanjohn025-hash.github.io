@@ -42,9 +42,12 @@ function nextDiv(s) {
   return '<span class="sub">Chưa có cổ tức tiền mặt</span>';
 }
 function divCell(s) {
-  const y = +state.data.today.slice(0, 4) - 1;
-  const dps = s.div.lastYearDps;
-  return `${dps ? `<b>${fP(dps)} đ</b>` : '<span class="sub">0 đ</span>'}<div class="sub">năm ${y} · lợi suất ${fPct(s.div.yieldTTM)}</div>`;
+  // Cùng một kỳ (12 tháng gần nhất) cho cả số tiền và lợi suất; lợi suất dùng trong mô hình ghi riêng.
+  const ttm = s.div.ttm;
+  const main = ttm ? `<b>${fP(ttm)} đ</b>` : '<span class="sub">0 đ</span>';
+  if (!ttm) return `${main}<div class="sub">chưa chia tiền mặt 12 tháng qua</div>`;
+  const note = s.div.special ? ' · gồm đợt trả lớn' : '';
+  return `${main}<div class="sub">12 tháng qua · ${fPct(s.div.yieldTTM)}${note}</div><div class="sub">tính vào mô hình: ${fPct(s.divYield, 1)}</div>`;
 }
 
 // ---------- Cột bảng ----------
@@ -65,7 +68,7 @@ const COL = {
   safety: { label: 'An toàn', sort: (s) => s.scores.safety, html: (s) => scoreBar(s.scores.safety) },
   divScore: { label: 'Cổ tức', sort: (s) => s.scores.dividend, html: (s) => scoreBar(s.scores.dividend) },
   er: {
-    label: 'LN kỳ vọng 12T', cls: 'num', sort: (s) => s.er,
+    label: 'Tiềm năng ước tính 12T', cls: 'num', sort: (s) => s.er,
     html: (s) => `<b class="${dirCls(s.er)}">${fPct(s.er)}</b><div class="sub">giá ${fPct(s.upside, 0, true)} + CT ${fPct(s.divYield, 1)}</div>`,
   },
   target: { label: 'Giá mục tiêu', cls: 'num', sort: (s) => s.target, html: (s) => `<b>${fP(s.target)}</b><div class="sub">hợp lý ${fP(s.fair)}</div>` },
@@ -73,7 +76,7 @@ const COL = {
   sell: { label: 'Vùng bán', html: (s) => `<span class="zone sell">${fP(s.zones.sellLow)} – ${fP(s.zones.sellHigh)}</span>` },
   stop: { label: 'Cắt lỗ', html: (s) => `<span class="zone stop">${fP(s.zones.stop)}</span>` },
   status: { label: 'Trạng thái', sort: (s) => ['buy', 'buyweak', 'wait', 'sell'].indexOf(s.zones.statusKey), html: (s) => statusBadge(s.zones) },
-  div: { label: 'Cổ tức tiền mặt', cls: 'num', sort: (s) => s.div.lastYearDps, html: divCell },
+  div: { label: 'Cổ tức tiền mặt', cls: 'num', sort: (s) => s.div.ttm, html: divCell },
   divDate: { label: 'Ngày GDKHQ / thanh toán', html: nextDiv },
   pe: { label: 'P/E', cls: 'num', sort: (s) => s.pe, html: (s) => fX(s.pe) },
   pb: { label: 'P/B', cls: 'num', sort: (s) => s.pb, html: (s) => fX(s.pb) },
@@ -112,10 +115,20 @@ function renderKpis() {
   const inBuyWeak = t20.filter((s) => s.zones.statusKey === 'buyweak').length;
   const strict = d.top10.filter((t) => t.tier === 'strict').length;
   const soon = d.calendar.filter((e) => e.exDate >= d.today && daysFrom(e.exDate) <= 30).length;
+  // Cảnh báo khi quá nhiều mã cùng ở vùng mua. Mốc lịch sử lấy từ backtest 03/2023–10/2026 (cao nhất 42%, trung bình 26%).
+  const all = Object.values(d.stocks);
+  const buyShare = all.length ? all.filter((s) => ['buy', 'buyweak'].includes(s.zones.statusKey)).length / all.length : 0;
+  const satEl = $('#sat-note');
+  if (satEl) {
+    satEl.hidden = buyShare < 0.5;
+    satEl.innerHTML = buyShare < 0.5 ? '' :
+      `<b>Cần thận trọng:</b> hiện ${Math.round(buyShare * 100)}% số mã đạt lọc đang ở "vùng mua", cao hơn mọi thời điểm trong dữ liệu kiểm chứng 2023–2026 (cao nhất 42%, trung bình 26%). ` +
+      `Khi gần như mã nào cũng báo "vùng mua", nhãn này ít giúp phân biệt mã tốt và xấu; thị trường chung có thể đang giảm. Không nên hiểu đây là tín hiệu mua đồng loạt.`;
+  }
   $('#kpis').innerHTML = `
     <div class="kpi"><div class="label">Mã qua vòng lọc</div><div class="value">${d.universeCount}</div><div class="sub">trên ${d.hoseCount} mã HOSE · vốn hoá ≥ ${fP(d.config.minMarketCap / 1e9)} tỷ</div></div>
     <div class="kpi"><div class="label">Top 20 đang ở vùng mua</div><div class="value">${inBuy + inBuyWeak}/20</div><div class="sub">${inBuy} mã xu hướng tốt · ${inBuyWeak} mã xu hướng còn yếu</div></div>
-    <div class="kpi"><div class="label">Top 10 đạt đủ tiêu chí</div><div class="value">${strict}/${d.top10.length}</div><div class="sub">${d.top10.length - strict} mã còn lại dùng tiêu chí nới lỏng</div></div>
+    <div class="kpi"><div class="label">Mã nổi bật đạt đủ tiêu chí</div><div class="value">${strict}/${d.top10.length}</div><div class="sub">${d.top10.length - strict} mã còn lại dùng tiêu chí nới lỏng</div></div>
     <div class="kpi"><div class="label">Sự kiện cổ tức sắp tới</div><div class="value">${d.calendar.length}</div><div class="sub">${soon} mã GDKHQ trong 30 ngày tới</div></div>`;
 }
 function daysFrom(iso) {
@@ -136,9 +149,9 @@ function renderTop10() {
   const strict = d.top10.filter((t) => t.tier === 'strict').length;
   const T = d.config.top10Tiers;
   $('#top10-note').innerHTML =
-    `<b>Tiêu chí đầy đủ:</b> LN kỳ vọng ${fPct(T[0].erMin, 0)}–${fPct(T[0].erMax, 0)}, điểm an toàn ≥ ${T[0].safety}, chất lượng ≥ ${T[0].quality}, giá không thấp hơn MA200 quá 3%. ` +
-    `Chỉ ${strict} mã đạt đủ; ${d.top10.length - strict} mã còn lại được bổ sung với <b>tiêu chí nới lỏng</b> (LN kỳ vọng ${fPct(T[1].erMin, 0)}–${fPct(T[1].erMax, 0)}, an toàn ≥ ${T[1].safety}, chất lượng ≥ ${T[1].quality}). ` +
-    `Không mô hình nào đảm bảo được mức sinh lời 25–30%; hãy coi đây là danh sách để nghiên cứu thêm.`;
+    `<b>Tiêu chí đầy đủ:</b> tiềm năng ước tính ${fPct(T[0].erMin, 0)}–${fPct(T[0].erMax, 0)}, điểm an toàn ≥ ${T[0].safety}, chất lượng ≥ ${T[0].quality}, giá không thấp hơn MA200 quá 3%. ` +
+    `Chỉ ${strict} mã đạt đủ; ${d.top10.length - strict} mã còn lại được bổ sung với <b>tiêu chí nới lỏng</b> (tiềm năng ước tính ${fPct(T[1].erMin, 0)}–${fPct(T[1].erMax, 0)}, an toàn ≥ ${T[1].safety}, chất lượng ≥ ${T[1].quality}). ` +
+    `Số mã hiển thị là số mã thực sự qua bộ lọc hôm nay (tối đa 10), không hạ chuẩn để cho đủ. Đây là kết quả ước tính của mô hình, không đảm bảo mức sinh lời nào; hãy coi là danh sách để nghiên cứu thêm.`;
 }
 function renderCalendar() {
   const d = state.data;
@@ -200,11 +213,11 @@ function renderMethod() {
   <p>Lấy toàn bộ cổ phiếu niêm yết trên HOSE, giữ lại mã có vốn hoá ≥ <b>${fP(c.minMarketCap / 1e9)} tỷ đồng</b>, giá trị giao dịch bình quân 10 phiên ≥ <b>${fP(c.minLiquidity / 1e9)} tỷ đồng/phiên</b>, EPS 4 quý gần nhất dương, P/E từ 0 đến 60 và vốn chủ sở hữu dương.</p>
   <h3>2. Năm nhóm điểm (0–100, xếp hạng phân vị trong nhóm mã đã lọc)</h3>
   <ul>
-    <li><b>Chất lượng (${w.quality * 100}%)</b>: ROE bình quân 5 quý (50%), ROA (20%), độ ổn định EPS 3 năm (30%); trừ điểm nếu có quý EPS âm.</li>
-    <li><b>Tăng trưởng (${w.growth * 100}%)</b>: tăng trưởng EPS 4 quý so với cùng kỳ và CAGR EPS 3 năm. EPS tăng đột biến &gt;100% bị giới hạn điểm vì có thể đến từ khoản lợi nhuận bất thường.</li>
-    <li><b>Định giá (${w.value * 100}%)</b>: mức chiết khấu của giá so với giá trị hợp lý (60%) và chỉ số PEG (40%).</li>
-    <li><b>An toàn (${w.safety * 100}%)</b>: beta (20%), độ biến động giá năm (25%), mức sụt giảm tối đa trong 1 năm (15%), vốn hoá (15%), thanh khoản (10%), xu hướng so với MA200 (15%).</li>
-    <li><b>Cổ tức (${w.dividend * 100}%)</b>: lợi suất cổ tức tiền mặt (60%) và số năm trả cổ tức tiền mặt trong 3 năm gần nhất (40%).</li>
+    <li><b>Chất lượng (${Math.round(w.quality * 100)}%)</b>: ROE bình quân 5 quý (50%), ROA (20%), độ ổn định EPS 3 năm (30%); trừ điểm nếu có quý EPS âm.</li>
+    <li><b>Tăng trưởng (${Math.round(w.growth * 100)}%)</b>: tăng trưởng EPS 4 quý so với cùng kỳ và CAGR EPS 3 năm. EPS tăng đột biến &gt;100% bị giới hạn điểm vì có thể đến từ khoản lợi nhuận bất thường.</li>
+    <li><b>Định giá (${Math.round(w.value * 100)}%)</b>: mức chiết khấu của giá so với giá trị hợp lý (60%) và chỉ số PEG (40%).</li>
+    <li><b>An toàn (${Math.round(w.safety * 100)}%)</b>: beta (20%), độ biến động giá năm (25%), mức sụt giảm tối đa trong 1 năm (15%), vốn hoá (15%), thanh khoản (10%), xu hướng so với MA200 (15%).</li>
+    <li><b>Cổ tức (${Math.round(w.dividend * 100)}%)</b>: lợi suất cổ tức tiền mặt (60%) và số năm trả cổ tức tiền mặt trong 3 năm gần nhất (40%).</li>
   </ul>
   <p><b>Top 20</b> = 20 mã có điểm tổng cao nhất, loại mã có ROE &lt; 8% hoặc EPS giảm &gt;25%, tối đa ${c.maxPerSector.top20} mã mỗi ngành.</p>
   <h3>3. Giá trị hợp lý và giá mục tiêu 12 tháng</h3>
@@ -213,13 +226,13 @@ function renderMethod() {
     <li>P/E (P/B) hợp lý = P/E hiện tại + ½ × (mức neo − P/E hiện tại), với mức neo = 60% trung vị 3 năm của chính mã + 40% trung vị ngành. Nghĩa là chỉ giả định định giá hồi phục một nửa.</li>
     <li>Giá mục tiêu mô hình = giá trị hợp lý × (1 + tăng trưởng EPS ước tính, giới hạn −15% đến +20%). Với nhóm tài chính dùng tốc độ tăng BVPS ≈ ROE − cổ tức.</li>
     <li>Nếu có giá mục tiêu của các công ty chứng khoán trong 6 tháng qua, giá mục tiêu cuối = ${(1 - c.analystWeight) * 100}% mô hình + ${c.analystWeight * 100}% trung vị CTCK (50/50 nếu có từ 2 CTCK). Tiềm năng tăng giá bị chặn ở mức +${c.maxUpside * 100}%.</li>
-    <li><b>Lợi nhuận kỳ vọng 12 tháng</b> = tiềm năng tăng giá + lợi suất cổ tức bền vững (mức thấp hơn giữa 12 tháng gần nhất và trung bình 3 năm, tối đa 10%, để cổ tức đặc biệt một lần không làm đẹp số liệu).</li>
+    <li><b>Tiềm năng ước tính 12 tháng</b> = tiềm năng tăng giá + lợi suất cổ tức bền vững (mức thấp hơn giữa 12 tháng gần nhất và trung bình 3 năm, tối đa 10%, để cổ tức đặc biệt một lần không làm đẹp số liệu; nếu 12 tháng qua không chia tiền mặt thì tính 0).</li>
   </ul>
-  <h3>4. Top 10 tiềm năng 25–30%/năm, an toàn cao</h3>
-  <p>Ưu tiên mã có LN kỳ vọng ${fPct(c.top10Tiers[0].erMin, 0)}–${fPct(c.top10Tiers[0].erMax, 0)} (vẫn nhận mức trên 30% vì mô hình luôn có sai số), điểm an toàn ≥ ${c.top10Tiers[0].safety}, chất lượng ≥ ${c.top10Tiers[0].quality}, giá không nằm dưới MA200 quá 3%, không có EPS tăng đột biến. Xếp theo trung bình của điểm an toàn và điểm tổng; tối đa ${c.maxPerSector.top10} mã mỗi ngành. Nếu chưa đủ 10 mã, bổ sung bằng tiêu chí nới lỏng và gắn nhãn rõ ràng.</p>
+  <h3>4. Mã nổi bật (tối đa 10 mã, theo điểm tổng hợp)</h3>
+  <p>Ưu tiên mã có tiềm năng ước tính ${fPct(c.top10Tiers[0].erMin, 0)}–${fPct(c.top10Tiers[0].erMax, 0)} (vẫn nhận mức trên 30% vì mô hình luôn có sai số), điểm an toàn ≥ ${c.top10Tiers[0].safety}, chất lượng ≥ ${c.top10Tiers[0].quality}, giá không nằm dưới MA200 quá 3%, không có EPS tăng đột biến. Xếp theo trung bình của điểm an toàn và điểm tổng; tối đa ${c.maxPerSector.top10} mã mỗi ngành. Nếu chưa đủ 10 mã, bổ sung bằng tiêu chí nới lỏng và gắn nhãn rõ ràng; nếu vẫn chưa đủ thì danh sách ngắn hơn 10 mã.</p>
   <h3>5. Vùng mua, vùng bán, cắt lỗ</h3>
   <ul>
-    <li><b>Cận trên vùng mua</b> = mức giá cao nhất mà nếu mua ở đó vẫn có LN kỳ vọng ≥ ${fPct(c.minReturn, 0)} (gồm cổ tức) và không vượt giá trị hợp lý. Nếu giá hiện tại đã thấp hơn mức này, vùng mua được đặt quanh giá hiện tại, cận dưới là vùng hỗ trợ (đáy 60 phiên).</li>
+    <li><b>Cận trên vùng mua</b> = mức giá cao nhất mà nếu mua ở đó vẫn có tiềm năng ước tính ≥ ${fPct(c.minReturn, 0)} (gồm cổ tức) và không vượt giá trị hợp lý. Nếu giá hiện tại đã thấp hơn mức này, vùng mua được đặt quanh giá hiện tại, cận dưới là vùng hỗ trợ (đáy 60 phiên).</li>
     <li><b>Vùng bán (chốt lời)</b> = giá mục tiêu ± 5%.</li>
     <li><b>Cắt lỗ</b> = thấp hơn cận dưới vùng mua khoảng 7% hoặc 2 lần ATR(14), tối đa 15%.</li>
     <li>"Vùng mua – xu hướng còn yếu": giá đang rẻ nhưng nằm dưới MA200 hơn 5%; nên chia nhỏ lệnh và chờ tín hiệu hồi phục.</li>
@@ -229,7 +242,16 @@ function renderMethod() {
   <p>Lấy từ lịch sự kiện quyền: cổ tức tiền mặt (đ/cp), cổ tức bằng cổ phiếu và cổ phiếu thưởng, kèm <b>ngày GDKHQ</b> (phải mua trước ngày này để được hưởng) và <b>ngày thanh toán</b>. "Cổ tức tiền mặt năm X" = tổng tiền mặt có ngày GDKHQ trong năm X.</p>
   <h3>7. Nguồn và cập nhật</h3>
   <p>Dữ liệu từ VNDirect Finfo API công khai. Trang tự chạy lại sau mỗi phiên (khoảng 15h45 các ngày làm việc) bằng GitHub Actions. Nút <b>Cập nhật trực tiếp</b> chạy cùng công thức ngay trong trình duyệt của bạn.</p>
-  <h3>8. Giới hạn cần biết</h3>
+  <h3>8. Kiểm chứng trong quá khứ (backtest 03/2023 – 11/2026)</h3>
+  <ul>
+    <li>Chạy lại đúng công thức của trang tại 45 ngày cuối tháng với dữ liệu như thể hôm đó là "hôm nay", rồi đo lợi suất thật sau 3, 6, 12 tháng (đã trừ phí 0,6%, tính cả cổ tức).</li>
+    <li>Chia mã thành 5 nhóm theo <b>tiềm năng ước tính</b>: nhóm cao nhất cho lợi suất thật 12 tháng khoảng <b>+27%</b>, nhóm thấp nhất khoảng <b>+9%</b>, trong khi mặt bằng chung khoảng +15%. Vì vậy hãy dùng chỉ số này để <b>so sánh thứ hạng</b>, không dùng như dự báo con số.</li>
+    <li>Mã đang ở "vùng chốt lời" hoặc có tiềm năng ước tính dưới 10% kém mặt bằng khoảng 4 điểm % sau 12 tháng.</li>
+    <li>Trọng số điểm và trần tiềm năng +35% được chọn sau khi xem kết quả này nên có thể quá lạc quan; chưa có kiểm chứng thật ngoài dữ liệu đã dùng.</li>
+    <li>Mức cắt lỗ mặc định bị chạm trong khoảng 4 trên 10 lệnh giả lập, thường trong vòng vài tháng.</li>
+    <li>Giới hạn: chỉ khoảng 3,7 năm, chủ yếu là thị trường tăng, số quan sát độc lập rất ít; không có giai đoạn giảm sâu. Chi tiết xem file BAO-CAO-BACKTEST.md trong kho mã.</li>
+  </ul>
+  <h3>9. Giới hạn cần biết</h3>
   <ul>
     <li>Mô hình dựa trên số liệu quá khứ; không lường trước được tin tức, thay đổi chính sách hay biến động vĩ mô.</li>
     <li>EPS và cổ tức có thể chưa điều chỉnh đầy đủ theo phát hành thêm / chia cổ phiếu thưởng.</li>
@@ -351,8 +373,8 @@ function openDetail(code) {
         ${metric('Vùng bán (chốt lời)', `<span class="zone sell">${fP(z.sellLow)} – ${fP(z.sellHigh)}</span>`)}
         ${metric('Ngưỡng cắt lỗ', `<span class="zone stop">${fP(z.stop)}</span>`)}
         ${metric('Giá mục tiêu 12 tháng', fP(s.target))}
-        ${metric('LN kỳ vọng tại giá hiện tại', fPct(s.er))}
-        ${metric('LN kỳ vọng nếu mua ở cận trên vùng mua', fPct(erAtBuy))}
+        ${metric('Tiềm năng ước tính tại giá hiện tại', fPct(s.er))}
+        ${metric('Tiềm năng ước tính nếu mua ở cận trên vùng mua', fPct(erAtBuy))}
         ${metric('Rủi ro nếu chạm cắt lỗ', fPct(riskAtBuy))}
         ${metric('Tỷ lệ lợi nhuận / rủi ro', isNum(rr) ? nf2.format(rr) + ' lần' : '—')}
       </div>
@@ -405,7 +427,7 @@ function openDetail(code) {
       <div class="metrics" style="margin-bottom:10px">
         ${metric(`Tiền mặt năm ${y - 1}`, fP(s.div.lastYearDps) + ' đ/cp')}
         ${metric('12 tháng gần nhất', `${fP(s.div.ttm)} đ/cp (${fPct(s.div.yieldTTM)})`)}
-        ${metric('Lợi suất dùng tính LN kỳ vọng', fPct(s.divYield))}
+        ${metric('Lợi suất dùng tính tiềm năng ước tính', fPct(s.divYield))}
         ${metric('Số năm trả tiền mặt (3 năm gần nhất)', `${s.div.yearsPaid}/3`)}
       </div>
       ${years.length ? `<table class="mini"><thead><tr><th>Năm (theo ngày GDKHQ)</th>${years.map((k) => `<th class="num">${k}</th>`).join('')}</tr></thead><tbody><tr><td>Cổ tức tiền mặt (đ/cp)</td>${years.map((k) => `<td class="num">${fP(s.div.byYear[k])}</td>`).join('')}</tr></tbody></table>` : ''}

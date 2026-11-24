@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lọc Cổ Phiếu HOSE</title>
-  <meta name="description" content="Bộ lọc cổ phiếu sàn HOSE tự động: top 20 mã tốt nhất, top 10 mã tiềm năng 25–30%/năm an toàn cao, vùng mua – vùng bán – cắt lỗ, cổ tức hằng năm và lịch trả cổ tức.">
+  <meta name="description" content="Bộ lọc cổ phiếu sàn HOSE tự động: top 20 mã tốt nhất, nhóm mã nổi bật theo điểm tổng hợp, vùng mua – vùng bán – cắt lỗ, cổ tức hằng năm và lịch trả cổ tức.">
   <meta property="og:title" content="Lọc Cổ Phiếu HOSE">
-  <meta property="og:description" content="Top 20 mã tốt nhất, top 10 mã tiềm năng 25–30%/năm, vùng mua/bán và lịch cổ tức – cập nhật mỗi ngày.">
+  <meta property="og:description" content="Top 20 mã tốt nhất, nhóm mã nổi bật, vùng mua/bán và lịch cổ tức – cập nhật mỗi ngày.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M6 22l6-7 5 4 9-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="assets/style.css">
   <script>
@@ -32,17 +32,18 @@
   <div class="banner" role="note">
     <div class="wrap">
       <b>Lưu ý:</b> Số liệu được tính tự động bằng công thức cố định từ dữ liệu công khai, <b>chỉ để tham khảo, không phải khuyến nghị đầu tư</b>.
-      "Lợi nhuận kỳ vọng" là ước tính của mô hình, không phải cam kết; giá cổ phiếu có thể giảm. Hãy tự kiểm tra thông tin trước khi giao dịch.
+      "Tiềm năng ước tính" là ước tính của mô hình, không phải cam kết; giá cổ phiếu có thể giảm. Hãy tự kiểm tra thông tin trước khi giao dịch.
     </div>
   </div>
 
   <main class="wrap">
     <div class="progress" id="progress" aria-live="polite"></div>
     <section class="kpis" id="kpis" aria-label="Tổng quan"></section>
+    <p class="note" id="sat-note" role="note" hidden></p>
 
     <nav class="tabs" role="tablist" aria-label="Danh mục">
       <button class="tab" role="tab" data-tab="top20" aria-selected="true">Top 20 tốt nhất</button>
-      <button class="tab" role="tab" data-tab="top10" aria-selected="false">Top 10 tiềm năng 25–30%</button>
+      <button class="tab" role="tab" data-tab="top10" aria-selected="false">Mã nổi bật</button>
       <button class="tab" role="tab" data-tab="calendar" aria-selected="false">Lịch cổ tức</button>
       <button class="tab" role="tab" data-tab="all" aria-selected="false">Tất cả mã</button>
       <button class="tab" role="tab" data-tab="method" aria-selected="false">Phương pháp</button>
@@ -61,8 +62,8 @@
     <section class="panel" id="tab-top10" role="tabpanel" hidden>
       <div class="panel-head">
         <div class="grow">
-          <h2>Top 10 mã tiềm năng sinh lời 25–30%/năm, độ an toàn cao</h2>
-          <p id="top10-desc">Lợi nhuận kỳ vọng 12 tháng = tiềm năng tăng giá tới giá mục tiêu + lợi suất cổ tức. Chỉ chọn mã có điểm an toàn và chất lượng cao, tối đa 3 mã mỗi ngành.</p>
+          <h2>Mã nổi bật theo điểm tổng hợp (tối đa 10 mã)</h2>
+          <p id="top10-desc">Tiềm năng ước tính 12 tháng = tiềm năng tăng giá tới giá mục tiêu + lợi suất cổ tức. Chỉ chọn mã vượt ngưỡng điểm an toàn và chất lượng, tối đa 3 mã mỗi ngành. Đây là ước tính, không phải cam kết.</p>
         </div>
       </div>
       <div class="table-wrap"><table class="cards" id="t-top10"></table></div>

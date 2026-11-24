@@ -12,9 +12,13 @@ export const CONFIG = {
     { key: 'strict', label: 'Đạt đủ tiêu chí', erMin: 0.25, erMax: 0.45, safety: 60, quality: 50, trend: true },
     { key: 'relaxed', label: 'Nới lỏng tiêu chí', erMin: 0.22, erMax: 0.50, safety: 50, quality: 40, trend: false },
   ],
-  weights: { quality: 0.25, growth: 0.15, value: 0.20, safety: 0.30, dividend: 0.10 },
+  // Trọng số cập nhật 24/11/2026 theo kết quả backtest (xem BAO-CAO-BACKTEST.md): tăng Định giá/Tăng trưởng,
+  // giảm Chất lượng/Cổ tức. Bản cũ: quality 0.25, growth 0.15, value 0.20, safety 0.30, dividend 0.10.
+  weights: { quality: 0.15, growth: 0.20, value: 0.30, safety: 0.30, dividend: 0.05 },
   analystWeight: 0.4,        // tỷ trọng giá mục tiêu đồng thuận của CTCK (0,5 nếu có từ 2 CTCK trở lên)
-  maxUpside: 0.6,            // trần tiềm năng tăng giá 12 tháng của mô hình
+  maxUpside: 0.35,           // trần tiềm năng tăng giá 12 tháng của mô hình (bản cũ 0,6: backtest cho thấy số hiển thị cao hơn thực tế ~10 điểm %)
+  top20Rank: 'total',        // cách xếp Top 20: 'total' (điểm tổng) | 'er' (LN kỳ vọng) | 'blend' (trung bình phân vị hai loại)
+  stop: { minPct: 0.07, maxPct: 0.15, atrMult: 2 }, // cắt lỗ: dưới cận dưới vùng mua tối thiểu minPct, ~atrMult×ATR, tối đa maxPct
   maxPerSector: { top20: 5, top10: 3 }, // giới hạn số mã cùng ngành để đa dạng hoá
 };
 
@@ -178,8 +182,11 @@ function dividendInfo(list, price, today) {
     .filter((e) => (e.exDate && e.exDate >= today) || (e.payDate && e.payDate >= today))
     .sort((a, b) => (a.exDate || '').localeCompare(b.exDate || ''));
   const history = all.sort((a, b) => (b.exDate || '').localeCompare(a.exDate || '')).slice(0, 14);
+  // Trung bình 3 năm trọn vẹn gần nhất; nếu 12 tháng qua cao hơn ~1,8 lần thì coi là có đợt trả lớn/đặc biệt.
+  const avg3 = ((byYear[y - 1] || 0) + (byYear[y - 2] || 0) + (byYear[y - 3] || 0)) / 3;
   return {
     ttm,
+    special: ttm > 0 && avg3 > 0 && ttm > 1.8 * avg3,
     yieldTTM: price ? ttm / price : null,
     byYear,
     lastYearDps: byYear[y - 1] || 0,
@@ -196,6 +203,8 @@ function normalizedYield(div, price, today, fallback) {
   const y = +today.slice(0, 4);
   const avg3 = ((div.byYear[y - 1] || 0) + (div.byYear[y - 2] || 0) + (div.byYear[y - 3] || 0)) / 3;
   if (div.ttm <= 0 && avg3 <= 0) return Math.min(or(fallback, 0), 0.1);
+  // Không chia tiền mặt trong 12 tháng qua thì không tính cổ tức vào lợi nhuận kỳ vọng (cách tính thận trọng).
+  if (div.ttm <= 0) return 0;
   return Math.min(Math.min(div.ttm || avg3, avg3 || div.ttm) / price, 0.1);
 }
 
@@ -237,7 +246,8 @@ function computeZones(s, C) {
     buyLow = buyHigh * 0.93;
     if (isNum(s.support) && s.support >= buyHigh * 0.88 && s.support <= buyHigh * 0.96) buyLow = s.support;
   }
-  const stop = Math.max(buyLow * 0.85, Math.min(buyLow * 0.93, buyLow - 2 * or(s.atr, 0)));
+  const SP = C.stop || { minPct: 0.07, maxPct: 0.15, atrMult: 2 };
+  const stop = Math.max(buyLow * (1 - SP.maxPct), Math.min(buyLow * (1 - SP.minPct), buyLow - SP.atrMult * or(s.atr, 0)));
   const sellLow = T * 0.95, sellHigh = T * 1.05;
   const weak = isNum(s.ma200) && P < s.ma200 * 0.95;
   let status, statusKey;
@@ -452,7 +462,13 @@ export async function buildDataset({ get, log = () => {}, now = new Date(), conf
   // ---------- Danh sách ----------
   const top20 = [];
   const sec20 = {};
-  for (const s of list.filter((x) => !x.hardFlag && x.scores.quality >= 40).sort((a, b) => b.scores.total - a.scores.total)) {
+  let rankScore = (s) => s.scores.total;
+  if (C.top20Rank === 'er') rankScore = (s) => s.er;
+  else if (C.top20Rank === 'blend') {
+    const rt = ranker(list.map((x) => x.scores.total)), re = ranker(list.map((x) => x.er));
+    rankScore = (s) => 0.5 * rt(s.scores.total) + 0.5 * re(s.er);
+  }
+  for (const s of list.filter((x) => !x.hardFlag && x.scores.quality >= 40).sort((a, b) => rankScore(b) - rankScore(a))) {
     if (top20.length >= 20) break;
     if ((sec20[s.sector] || 0) >= C.maxPerSector.top20) continue;
     sec20[s.sector] = (sec20[s.sector] || 0) + 1;
@@ -512,7 +528,7 @@ export async function buildDataset({ get, log = () => {}, now = new Date(), conf
       zones: s.zones, flags: s.flags,
       analyst: s.analyst ? { ...s.analyst, target: roundPrice(s.analyst.target) } : null,
       div: {
-        ttm: s.div.ttm, yieldTTM: rnd(s.div.yieldTTM, 4), byYear: s.div.byYear, lastYearDps: s.div.lastYearDps,
+        ttm: s.div.ttm, special: !!s.div.special, yieldTTM: rnd(s.div.yieldTTM, 4), byYear: s.div.byYear, lastYearDps: s.div.lastYearDps,
         yearsPaid: s.div.yearsPaid, upcoming: s.div.upcoming, history: s.div.history,
       },
       spark: s.spark,

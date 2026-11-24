@@ -35,4 +35,23 @@ if (data.universeCount < 30 || data.top20.length < 10) {
 }
 await mkdir(join(root, 'data'), { recursive: true });
 await writeFile(join(root, 'data', 'stocks.json'), JSON.stringify(data));
+
+// Bản chụp gọn theo phiên giao dịch, dùng để kiểm chứng mô hình (backtest/forward test) sau này.
+// Mỗi phiên một file, ghi đè nếu chạy lại trong cùng phiên.
+await mkdir(join(root, 'data', 'history'), { recursive: true });
+const snap = {
+  tradingDate: data.tradingDate,
+  generatedAt: data.generatedAt,
+  top20: data.top20,
+  top10: data.top10,
+  stocks: Object.fromEntries(
+    Object.values(data.stocks).map((s) => [s.code, {
+      price: s.price, er: s.er, upside: s.upside, divYield: s.divYield, target: s.target, fair: s.fair,
+      total: s.scores?.total, safety: s.scores?.safety, status: s.zones?.statusKey,
+      buyLow: s.zones?.buyLow, buyHigh: s.zones?.buyHigh, sellLow: s.zones?.sellLow, sellHigh: s.zones?.sellHigh, stop: s.zones?.stop,
+      ma200: s.ma200,
+    }]),
+  ),
+};
+await writeFile(join(root, 'data', 'history', `${data.tradingDate}.json`), JSON.stringify(snap));
 console.log(`Đã ghi data/stocks.json — phiên ${data.tradingDate}, ${data.universeCount} mã, top20=${data.top20.length}, top10=${data.top10.length}, ${data.calendar.length} sự kiện cổ tức, ${calls} lượt gọi API, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
